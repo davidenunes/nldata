@@ -153,6 +153,9 @@ class DownloadConfig:
     force_extract: bool = False
 
 
+DEFAULT_DL_CONFIG = DownloadConfig(cache_dir=NL_DATASETS_CACHE)
+
+
 def is_remote_url(url_or_filename):
     parsed = urlparse(url_or_filename)
     return parsed.scheme in ("http", "https", "s3", "gs", "hdfs")
@@ -423,10 +426,12 @@ def get_from_cache(
     return cache_path
 
 
-class DownloadManager(object):
-    def __init__(
-            self, dataset_name=None, data_dir=None, download_config=None,
-    ):
+class DownloadManager:
+    def __init__(self,
+                 dataset_name=None,
+                 data_dir=None,
+                 download_config=DEFAULT_DL_CONFIG,
+                 ):
         """Download manager constructor.
         Args:
             data_dir: can be used to specify a manual directory to get the files from.
@@ -439,7 +444,6 @@ class DownloadManager(object):
         self._dataset_name = dataset_name
         self._data_dir = data_dir
         self._download_config = download_config
-        # To record what is being used: {url: {num_bytes: int, checksum: str}}
         self._recorded_sizes_checksums = {}
 
     @property
@@ -448,19 +452,23 @@ class DownloadManager(object):
 
     @property
     def downloaded_size(self):
-        """Returns the total size of downloaded files."""
+        """ downloaded size
+
+        Returns the total size of downloaded files.
+        """
         return sum(checksums_dict["num_bytes"] for checksums_dict in self._recorded_sizes_checksums.values())
 
     def _record_sizes_checksums(self, url_or_urls, downloaded_path_or_paths):
-        """Record size/checksum of downloaded files."""
+        """ Record size and checksum of downloaded files.
+        """
         flattened_urls_or_urls = flatten_nested(url_or_urls)
         flattened_downloaded_path_or_paths = flatten_nested(downloaded_path_or_paths)
         for url, path in zip(flattened_urls_or_urls, flattened_downloaded_path_or_paths):
             self._recorded_sizes_checksums[url] = get_size_checksum_dict(path)
 
     def download_custom(self, url_or_urls, custom_download):
-        """
-        Download given urls(s) by calling `custom_download`.
+        """  Download given urls(s) by calling a given `custom_download` callable.
+
         Args:
             url_or_urls: url or `list`/`dict` of urls to download and extract. Each
                 url is a `str`.
@@ -472,8 +480,8 @@ class DownloadManager(object):
         """
         cache_dir = self._download_config.cache_dir or os.path.join(NL_DATASETS_CACHE, "downloads")
 
-        def url_to_downloaded_path(url):
-            return os.path.join(cache_dir, hash_url_to_filename(url))
+        def url_to_downloaded_path(target_url):
+            return os.path.join(cache_dir, hash_url_to_filename(target_url))
 
         downloaded_path_or_paths = map_nested(url_to_downloaded_path, url_or_urls)
         flattened_urls_or_urls = flatten_nested(url_or_urls)

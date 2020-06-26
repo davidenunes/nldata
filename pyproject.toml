@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "nldata"
-version = "0.2.0"
+version = "0.3.0"
 description = "NLData is a library of Natural Language Datasets."
-authors = ["Davide Nunes <mail@davidenunes.com>"]
+authors = ["Davide Nunes <davidenunes@pm.me>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -10,6 +10,9 @@ filelock = "^3.0.12"
 requests = "^2.24.0"
 tqdm = "^4.46.1"
 numpy = "^1.19.0"
+Cython = "^0.29.20"
+cyac = "^1.0"
+smart_open = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

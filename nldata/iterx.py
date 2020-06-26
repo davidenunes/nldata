@@ -106,7 +106,7 @@ def get_n_slices(n, n_slices=1, offset=0):
     return ranges
 
 
-def narrow_it(iterable, n):
+def only_n_it(iterable, n):
     """Iterates through iterable until n items are returns"""
     source_iter = iter(iterable)
     i = 0

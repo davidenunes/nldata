@@ -38,13 +38,13 @@ class WaCKy:
             an Iterator over the sentences in the form of lists of strings.
     """
 
-    def __init__(self, f_in, lemma=False):
+    def __init__(self, file, lemma=False):
         self.lemma = lemma
         self.current_line = None
-        if f_in.endswith("gz"):
-            self.source = gzopen(f_in, 'rt', encoding='latin-1')
+        if file.endswith("gz"):
+            self.source = gzopen(file, 'rt', encoding='latin-1')
         else:
-            self.source = open(f_in, 'r', encoding='latin-1')
+            self.source = open(file, 'r', encoding='latin-1')
 
     def close(self):
         self.source.close()

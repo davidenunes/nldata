@@ -1,6 +1,6 @@
 import os
-import itertools
-import functools
+from nldata.utils import DownloadManager
+from nldata.corpora.corpus import Corpus
 
 
 class PTNewsIterator:
@@ -9,13 +9,14 @@ class PTNewsIterator:
     Args:
         mark_eoa: mark end of article
     """
-    EOA = "<eoa>"
-    EOS = "<eos>"
-    EOP = "<eop>"
+    EOA = "<eoa>"  # end of article
+    EOS = "<eos>"  # end of sentence
+    EOP = "<eop>"  # end of paragraph
+    UNKNOWN_TOKEN = "<unk>"  # unknown
 
     def __init__(self, file,
-                 max_samples=None,
-                 max_articles=None,
+                 n=None,
+                 n_articles=None,
                  mark_eos=False,
                  mark_eoa=False,
                  with_date_url=True):
@@ -27,8 +28,8 @@ class PTNewsIterator:
 
         self.mark_eos = mark_eos
         self.mark_eoa = mark_eoa
-        self.max_samples = max_samples
-        self.max_articles = max_articles
+        self.n = n
+        self.n_articles = n_articles
         self.num_articles = 0
         self.num_samples = 0
         self.with_date_url = with_date_url
@@ -37,10 +38,10 @@ class PTNewsIterator:
     def generate_samples(self):
         with open(self.file, 'r', encoding='utf8') as file:
             while True:
-                if self.max_samples is not None and self.num_samples >= self.max_samples:
+                if self.n is not None and self.num_samples >= self.n:
                     return
 
-                elif self.max_articles is not None and self.num_articles >= self.max_articles:
+                elif self.n_articles is not None and self.num_articles >= self.n_articles:
                     return
 
                 self.current_line = file.readline()
@@ -75,8 +76,6 @@ class PTNewsIterator:
                                 yield [PTNewsIterator.EOA]
                         else:
                             self.reading_body = True
-
-                        # return self.__next__()
                     else:
                         self.num_samples += 1
                         if self.mark_eos:
@@ -90,54 +89,44 @@ class PTNewsIterator:
         next(self.gen)
 
 
-class PTNews:
+class PTNews(Corpus):
     """ WikiText103 Corpus Reader
             
         Args:
-            path: path to the directory containing the dataset assets.
+            data_dir: path to the directory containing the dataset assets.
             mark_eos: if true, adds an extra <eos> token to the end of each sentence.
     """
-    # end of article
-    EOA = "<eoa>"
-    # end of sentence
-    EOS = "<eos>"
-    # end of paragraph
-    EOP = "<eop>"
-    UNKNOWN_TOKEN = "<unk>"
 
-    def __init__(self, path, mark_eos=False):
-        self.mark_eos = mark_eos
-        self.path = path
-        self.train_file = os.path.join(path, 'ptnews.train.tokens')
-        self.valid_file = os.path.join(path, 'ptnews.valid.tokens')
-        self.test_file = os.path.join(path, 'ptnews.test.tokens')
+    def __init__(self,
+                 data_dir=None,
+                 mark_eos=False,
+                 mark_eoa=False,
+                 with_date_url=False,
+                 n_articles=None):
+        name = "PTNews"
+        data_url = "https://zenodo.org/record/3908507/files/ptnews.tar.gz?download=1"
 
-        self.data_url = "https://storage.googleapis.com/nldata_ptnews/ptnews_v1.tar.gz"
+        if data_dir is None:
+            dl_manager = DownloadManager(dataset_name=name)
+            data_dir = dl_manager.download_and_extract(data_url)
 
-        # extract_path = os.path.join(dl_manager.download_and_extract(_URL), "multi-news-original")
+        splits = {"train": 'ptnews.train.tokens',
+                  "valid": 'ptnews.valid.tokens',
+                  "test": 'ptnews.test.tokens'}
 
-        if not os.path.exists(self.train_file):
-            raise FileNotFoundError("could find train set in {path}".format(path=self.train_file))
+        super().__init__(
+            data_dir=data_dir,
+            data_url=data_url,
+            name=name,
+            splits=splits,
+            corpus_it=PTNewsIterator,
+            mark_eos=mark_eos,
+            with_date_url=with_date_url,
+            n_articles=n_articles,
+            mark_eoa=mark_eoa
+        )
 
-        # if not os.path.exists(self.valid_file):
-        #     raise FileNotFoundError("could find validation set in {path}".format(path=self.valid_file))
-        # if not os.path.exists(self.test_file):
-        #     raise FileNotFoundError("could find test set in {path}".format(path=self.test_file))
 
-    def split(self, name="full", n_samples=None, n_articles=None):
-        iter_split = functools.partial(PTNewsIterator,
-                                       max_samples=n_samples,
-                                       max_articles=n_articles,
-                                       mark_eos=self.mark_eos,
-                                       with_date_url=False)
-
-        if name == "full":
-            return iter_split(self.train_file)  # itertools.chain(map(iter_split, [self.train_file]))
-        elif name == "train":
-            return iter_split(self.train_file)
-        elif name == "validation":
-            return iter_split(self.train_file)
-        elif name == "test":
-            return iter_split(self.train_file)
-        else:
-            raise KeyError(f"invalid split {name}, expected: full, train, validation, test")
+__all__ = [
+    "PTNews"
+]
