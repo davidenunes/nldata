@@ -3,6 +3,7 @@ from abc import ABC
 from functools import partial
 from nldata.iterx import only_n_it, chain_it
 import os
+from itertools import chain
 
 
 class Corpus(ABC):
@@ -45,11 +46,19 @@ class Corpus(ABC):
         self.name = name
         self.corpus_it = corpus_it
         self.it_args = it_args
-        self.splits = {name: os.path.join(self.data_dir, file) for name, file in splits.items()}
 
-        for name, file in self.splits.items():
-            if not os.path.exists(file):
-                raise FileNotFoundError(f"could find file for {name} split in {file}")
+        def file_or_files(files):
+            if isinstance(files, str):
+                return [os.path.join(self.data_dir, files)]
+            else:
+                return [os.path.join(self.data_dir, file) for file in files]
+
+        self.splits = {name: file_or_files(file) for name, file in splits.items()}
+
+        for name, files in self.splits.items():
+            for file in files:
+                if not os.path.exists(file):
+                    raise FileNotFoundError(f"could find file for {name} split in {file}")
 
     def split(self, name="full", n=None, **kwargs):
         new_args = dict(self.it_args)
@@ -59,12 +68,12 @@ class Corpus(ABC):
         iter_split = partial(self.corpus_it, **new_args)
 
         if name == "full":
-            it = chain_it(*[iter_split(file) for file in self.splits.values()])
+            it = chain_it(*(chain_it(*map(iter_split, files)) for files in self.splits.values()))
         else:
             if name not in self.splits:
                 raise KeyError(f"invalid split {name}, expected: full, {', '.join(self.splits.keys())}")
             else:
-                it = iter_split(self.splits[name])
+                it = chain_it(*map(iter_split, self.splits[name]))
 
         if n is not None:
             it = only_n_it(it, n)

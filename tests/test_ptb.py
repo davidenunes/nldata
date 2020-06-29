@@ -1,14 +1,13 @@
 import unittest
 from nldata.corpora import PTB
-import os
 
 
 class MyTestCase(unittest.TestCase):
     def test_download_iter(self):
         ptb = PTB()
-        it = ptb.split("valid", n=2)
-        for sample in it:
-            pass
+        it = ptb.split("train", n=4)
+        samples = [s for s in it]
+        self.assertEqual(len(samples), 4)
 
 
 if __name__ == '__main__':

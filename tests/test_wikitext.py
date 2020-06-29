@@ -1,14 +1,13 @@
 import unittest
 from nldata.corpora.wiki103 import WikiText103
-from nldata.iterx import flatten_it
 
 
-class MyTestCase(unittest.TestCase):
+class TestWikiText(unittest.TestCase):
     def test_download_iter(self):
         wiki = WikiText103()
         it = wiki.split(name="test", n=2)
-        for sample in it:
-            print(sample)
+        samples = [s for s in it]
+        self.assertEqual(len(samples), 2)
 
 
 if __name__ == '__main__':
