@@ -9,6 +9,14 @@ class MyTestCase(unittest.TestCase):
         samples = [s for s in it]
         self.assertEqual(len(samples), 4)
 
+        it = ptb.split("valid", n=4)
+        samples = [s for s in it]
+        self.assertEqual(len(samples), 4)
+
+        it = ptb.split("test", n=4)
+        samples = [s for s in it]
+        self.assertEqual(len(samples), 4)
+
 
 if __name__ == '__main__':
     unittest.main()
