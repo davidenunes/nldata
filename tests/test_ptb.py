@@ -17,6 +17,10 @@ class MyTestCase(unittest.TestCase):
         samples = [s for s in it]
         self.assertEqual(len(samples), 4)
 
+    def test_exhaust_iter(self):
+        ptb = PTB()
+        it = ptb.split("valid")
+
 
 if __name__ == '__main__':
     unittest.main()

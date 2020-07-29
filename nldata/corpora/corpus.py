@@ -3,7 +3,7 @@ from abc import ABC
 from functools import partial
 from nldata.iterx import only_n_it, chain_it
 import os
-from itertools import chain
+import itertools
 
 
 class Corpus(ABC):
@@ -73,7 +73,7 @@ class Corpus(ABC):
             if name not in self.splits:
                 raise KeyError(f"invalid split {name}, expected: full, {', '.join(self.splits.keys())}")
             else:
-                it = chain_it(*map(iter_split, self.splits[name]))
+                it = itertools.chain.from_iterable(map(iter_split, self.splits[name]))
 
         if n is not None:
             it = only_n_it(it, n)

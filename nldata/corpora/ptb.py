@@ -15,9 +15,7 @@ class PTBIterator:
     def __init__(self, file, n=None, mark_eos=False):
         self.file = file
         self.current_sentence = None
-        self.source = open(file, 'r')
         self.mark_eos = mark_eos
-
         self.max_samples = n
         self.num_samples = 0
         self.generator = self.sample_generator()
@@ -39,7 +37,7 @@ class PTBIterator:
                 yield tokens
 
     def __iter__(self):
-        return iter(self.generator)
+        return self
 
     def __next__(self):
         return next(self.generator)
